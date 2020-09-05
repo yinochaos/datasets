@@ -13,18 +13,26 @@ datasets for easy machine learning use
 
 ## Datasets API
 --------
-- 1
-- 2
-- 3
+- DataSchema
+- generate_dataset()
 
 ### raw_dataset
 RawDataset是针对一行的数据内容进行解析处理，转换得到Dataset的
 <details>
 <summary>展开查看具体举例说明</summary>
 <pre><code>
-System.out.println("Hello to see U!"); # aaadf
+token_dicts = None
+data_filed_list = []
+data_filed_list.append(DataSchema(name='query', processor='to_np', type=tf.int32,
+                                    dtype='int32', shape=(None,), is_with_len=True))
+label_field = DataSchema(name='label', processor='to_np',
+                            type=tf.float32, dtype='float32', shape=(1,), is_with_len=False)
+generator = RawDataset(file_path="tests/data/raw_datasets", token_dicts=token_dicts,
+                        data_field_list=data_filed_list, label_field=label_field, file_suffix='varnum.input')
+dataset = generator.generate_dataset(batch_size=4, is_training=True)
+for batch_num, (x, label) in enumerate(dataset):
+    pass
 </code></pre>
-hello
 </details>
 
 ### seq_dataset
@@ -33,9 +41,8 @@ SeqDataset是针对序列按照行来排列的形式解析解析处理，并转�
 <details>
 <summary>展开查看具体举例说明</summary>
 <pre><code>
-System.out.println("Hello to see U!"); # aaadf
+#@TODO
 </code></pre>
-hello
 </details>
 
 
@@ -44,9 +51,8 @@ hello
 <details>
 <summary>展开查看具体举例说明</summary>
 <pre><code>
-System.out.println("Hello to see U!"); # aaadf
+#@TODO
 </code></pre>
-hello
 </details>
 
 ### listwise_dataset
@@ -54,9 +60,8 @@ hello
 <details>
 <summary>展开查看具体举例说明</summary>
 <pre><code>
-System.out.println("Hello to see U!"); # aaadf
+#@TODO
 </code></pre>
-hello
 </details>
 
 ### data_processor_dicts
@@ -70,11 +75,12 @@ System.out.println("Hello to see U!"); # aaadf
 hello
 </details>
 
-## data
+## example data
 --------
-- 1
-- 2
-- 3
+- tests/data/raw_datasets/query_float.input format:id\tlabel\tquery\tfloats
+- tests/data/raw_datasets/varnum.input format:id\tlabel\tnums
+- tests/data/pairwise_datasets/simple_pair.input
+- tests/data/seq_datasets/simple_seq.input
 
 
 ## TODO

@@ -26,4 +26,5 @@ class TestDatasets(unittest.TestCase):
         # init token_dicts
         token_dicts = TokenDicts('tests/data/dicts', {'query':0})
         
-
+if __name__ == '__main__':
+    unittest.main()
