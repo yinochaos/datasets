@@ -9,7 +9,7 @@
 datasets for easy machine learning use
 
 -   Free software: Apache Software License 2.0
--   Documentation: <https://datasets.readthedocs.io>.
+-   Documentation: <https://ml-dataset.readthedocs.io>.
 
 ## Datasets API
 --------

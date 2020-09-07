@@ -19,19 +19,14 @@
 """
 
 from __future__ import absolute_import, division, print_function
-import sys
 import os
-import io
-import tensorflow as tf
-import numpy as np
-import codecs
 import subprocess
-import pickle
-from collections import namedtuple
+import tensorflow as tf
+import codecs
+#from collections import namedtuple
 import logging
 
 from datasets.utils import TokenDicts, DataSchema, data_processor_dicts
-
 
 class Dataset(object):
     """从文件流创建的dataset
@@ -39,11 +34,10 @@ class Dataset(object):
         并通过token_dicts和datafields支持配置化的数据处理，灵活支持多输入数据集的处理
         text（local ， hdfs）：当前已经支持
         @TODO : 支持多种文件读取方式
-        pickle：
-        tfrecord：
-        LMDB（Lightning Memory-Mapped Database(快如闪电的内存映射数据库)）：
-        HDF5：
-        @TODO : add weight_fn SUPPORT
+        pickle：finish TODO test
+        tfrecord：code&test finish 
+        LMDB（Lightning Memory-Mapped Database(快如闪电的内存映射数据库)）：TODO
+        HDF5：TODO
     """
     ##
     # @brief

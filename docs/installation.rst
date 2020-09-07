@@ -12,7 +12,7 @@ To install datasets, run this command in your terminal:
 
 .. code-block:: console
 
-    $ pip install datasets
+    $ pip install ml-dataset
 
 This is the preferred method to install datasets, as it will always install the most recent stable release.
 
