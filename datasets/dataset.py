@@ -28,6 +28,7 @@ import logging
 
 from datasets.utils import TokenDicts, DataSchema, data_processor_dicts
 
+
 class Dataset(object):
     """从文件流创建的dataset
         利用tf.dataset支持多文件输入（本地和HDFS同时支持），对于大规模数据集十分友好；
@@ -35,6 +36,7 @@ class Dataset(object):
         text（local ， hdfs）：当前已经支持
         @TODO : 支持多种文件读取方式
         pickle：finish TODO test
+        qiuckle:  
         tfrecord：code&test finish 
         LMDB（Lightning Memory-Mapped Database(快如闪电的内存映射数据库)）：TODO
         HDF5：TODO
@@ -79,7 +81,7 @@ class Dataset(object):
         self.additive_schema = additive_schema
         self.variable_shape_index_list = [
             self.get_variable_shape_index(x.shape) for x in data_field_list]
-        print('variable_shape_index_list', self.variable_shape_index_list)
+        #print('variable_shape_index_list', self.variable_shape_index_list)
         self.flat_features = []
         for x in self.data_field_list:
             if x.processor is not None:
@@ -152,8 +154,6 @@ class Dataset(object):
     # @brief
     #    根据data_field_list的token_dicts和processor来解析一行数据
     #    数据格式 : (label\t)sample_id\tadditive_info\tdata_field1\tdata_field2\tdata_field3\t...
-    #    TODO : 增加对于sample_id的支持
-    #    TODO : 增加对于sanple_weight的支持
     #    A tf.data dataset. Should return a tuple of either (inputs, targets) or (inputs, targets, sample_weights)
     #
     # @param line
@@ -175,7 +175,6 @@ class Dataset(object):
     # @brief
     #       file的读取迭代器，支持本地文件和HDFS文件的读取
     #       TODO ： 可以考虑添加其他网络文件的读取支持
-    #    @TODO : 支持多种文件读取方式
     #    pickle：
     #    tfrecord：
     #    LMDB（Lightning Memory-Mapped Database(快如闪电的内存映射数据库)）：
@@ -209,7 +208,6 @@ class Dataset(object):
     ##
     # @brief
     #       file的读取迭代器，支持本地文件和HDFS文件的读取
-    #       TODO ： 可以考虑添加其他网络文件的读取支持
     #
     # @return dataset output
 
@@ -232,7 +230,6 @@ class Dataset(object):
     ##
     # @brief
     #       file的读取迭代器，支持本地文件和HDFS文件的读取
-    #       TODO ： 可以考虑添加其他网络文件的读取支持
     #
     # @return dataset output
     def data_generator_training(self):
@@ -257,7 +254,6 @@ class Dataset(object):
     ##
     # @brief
     #       file的读取迭代器，支持本地文件和HDFS文件的读取
-    #       TODO ： 可以考虑添加其他网络文件的读取支持
     #
     # @return dataset output
 
@@ -343,7 +339,7 @@ class Dataset(object):
         for field in self.flat_features:
             feature_description[field.name] = tf.io.FixedLenFeature(
                 [], tf.string)
-        print('feature_des', feature_description)
+        #print('feature_des', feature_description)
 
         def _parse_function(example_proto):
             # Parse the input tf.train.Example proto using the dictionary above.
@@ -429,20 +425,34 @@ class Dataset(object):
             features=tf.train.Features(feature=feature))
         return example_proto.SerializeToString()
 
-    def to_tfrecords(self, output_path):
+    def to_tfrecords(self, output_path, num=1):
+        def reduce_func(key, dataset):
+            filename = tf.strings.join(
+                [output_path, tf.strings.as_string(key)])
+            writer = tf.data.experimental.TFRecordWriter(filename)
+            writer.write(dataset.map(lambda _, x: x, num_parallel_calls=8))
+            # writer.write(dataset.map(tf_serialize_example))
+            return tf.data.Dataset.from_tensors(filename)
+
         def tf_serialize_example(*features):
             tf_string = tf.py_function(
                 self.serialize_example,
                 (features),  # pass these args to the above function.
                 tf.string)      # the return type is `tf.string`.
-            return tf.reshape(tf_string, ())  # The result is a scalar 
-        #print('types', self._get_types(True,True), 'types', self._get_shapes(True,True))
+            return tf.reshape(tf_string, ())  # The result is a scalar
+
         dataset = tf.data.Dataset.from_generator(self.data_generator_tfrecord_flat,
                                                  output_shapes=self._get_shapes(
                                                      True, True),
                                                  output_types=self._get_types(True, True))
-        for d in dataset.take(2):
-            print(d)
         dataset = dataset.map(tf_serialize_example)
-        writer = tf.data.experimental.TFRecordWriter(output_path)
-        writer.write(dataset)
+        if num == 1:
+            writer = tf.data.experimental.TFRecordWriter(output_path)
+            writer.write(dataset)
+        elif num > 1:
+            dataset = dataset.enumerate()
+            dataset = dataset.apply(tf.data.experimental.group_by_window(
+                lambda i, _: i % num, reduce_func, tf.int64.max
+            ))
+            for _ in enumerate(dataset):
+                pass
