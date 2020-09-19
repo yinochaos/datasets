@@ -70,10 +70,10 @@ class TokenDicts(object):
                 freq = float(freq)
                 sum_freqs += freq
                 for i in range(0, len(search_min_freqs)):
-                    if freq > i+1:
+                    if freq > i + 1:
                         search_min_freqs[i] += freq
         for i in range(0, len(search_min_freqs)):
-            if search_min_freqs[i] < (1-percent) * sum_freqs:
+            if search_min_freqs[i] < (1 - percent) * sum_freqs:
                 return i
         return self.search_range
 

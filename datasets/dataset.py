@@ -36,8 +36,8 @@ class Dataset(object):
         text（local ， hdfs）：当前已经支持
         @TODO : 支持多种文件读取方式
         pickle：finish TODO test
-        qiuckle:  
-        tfrecord：code&test finish 
+        qiuckle:
+        tfrecord：code&test finish
         LMDB（Lightning Memory-Mapped Database(快如闪电的内存映射数据库)）：TODO
         HDF5：TODO
     """
@@ -88,7 +88,7 @@ class Dataset(object):
                 self.flat_features.append(x)
                 if x.is_with_len:
                     self.flat_features.append(DataSchema(
-                        name=x.name+'len', type=tf.int32))
+                        name=x.name + 'len', type=tf.int32))
         if self.is_with_label:
             self.flat_features.append(label_field)
         if not self.is_batch_padding:
@@ -271,7 +271,7 @@ class Dataset(object):
                 if self.weight_fn is not None:
                     weight = self.weight_fn(line)
                     if weight > 0:
-                        yield tuple(features+[label, weight])
+                        yield tuple(features + [label, weight])
                 else:
                     yield tuple(features + [label])
 

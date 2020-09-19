@@ -1,1 +1,1 @@
-python3 -m unittest discover tests test*.py
+python3.8 -m unittest discover tests test*.py

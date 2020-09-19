@@ -7,7 +7,8 @@
 import unittest
 import tensorflow as tf
 
-from datasets.raw_dataset import RawDataset
+from datasets import TextlineParser
+from datasets import TFDataset
 from datasets.utils import TokenDicts, DataSchema
 
 
@@ -23,14 +24,22 @@ class TestDatasets(unittest.TestCase):
         """Tear down test fixtures, if any."""
         pass
 
+    def debug_tfrecord_format(self, tfrecord_file):
+        filenames = [tfrecord_file]
+        raw_dataset = tf.data.TFRecordDataset(filenames)
+        for raw_record in raw_dataset.take(1):
+            example = tf.train.Example()
+            example.ParseFromString(raw_record.numpy())
+            print(example)
+
     def pass_allway_dataset(self, generator, batch_size=4):
         print('is_training = True ', 'weight_fn=1')
         def weight_fn(x): return 1
-        generator.set_weight_fn(weight_fn)
+        generator.parser.set_weight_fn(weight_fn)
         dataset = generator.generate_dataset(batch_size, 1, is_training=True)
         self.pass_dataset(True, True, dataset)
         print('is_training = False ', 'No weight_fn')
-        generator.set_weight_fn(None)
+        generator.parser.set_weight_fn(None)
         dataset = generator.generate_dataset(batch_size, 1, is_training=False)
         self.pass_dataset(False, False, dataset)
         print('is_training = True ', 'No weight_fn')
@@ -68,7 +77,6 @@ class TestDatasets(unittest.TestCase):
                     break
 
     def test_raw_query_float_dataset(self):
-        """Test something."""
         # init token_dicts
         token_dicts = TokenDicts('tests/data/dicts', {'query': 0})
         data_field_list = []
@@ -79,10 +87,8 @@ class TestDatasets(unittest.TestCase):
             name='width', processor='to_np', type=tf.float32, dtype='float32', shape=(4)))
         label_field = DataSchema(
             name='label', processor='to_np', type=tf.float32, dtype='float32', shape=(1,))
-    # def __init__(self, file_path, token_dicts, data_field_list, label_field,  \
-    #             file_system='local', file_suffix=None,  weight_fn=None):
-        generator = RawDataset(file_path='tests/data/raw_datasets', token_dicts=token_dicts,
-                               data_field_list=data_field_list, label_field=label_field, file_suffix='query_float.input')
+        parser = TextlineParser(token_dicts, data_field_list, label_field)
+        generator = TFDataset(parser=parser, file_path='tests/data/raw_datasets', file_suffix='query_float.input')
         dataset = generator.generate_dataset(
             batch_size=12, num_epochs=1, is_shuffle=False)
         for _ in enumerate(dataset):
@@ -90,14 +96,45 @@ class TestDatasets(unittest.TestCase):
 
     def test_raw_dataset_varnum(self):
         token_dicts = None
-        data_filed_list = []
-        data_filed_list.append(DataSchema(name='query', processor='to_np', type=tf.int32,
+        data_field_list = []
+        data_field_list.append(DataSchema(name='query', processor='to_np', type=tf.int32,
                                           dtype='int32', shape=(None,), is_with_len=True))
         label_field = DataSchema(name='label', processor='to_np',
                                  type=tf.float32, dtype='float32', shape=(1,), is_with_len=False)
-        generator = RawDataset(file_path="tests/data/raw_datasets", token_dicts=token_dicts,
-                               data_field_list=data_filed_list, label_field=label_field, file_suffix='varnum.input')
+        parser = TextlineParser(token_dicts, data_field_list, label_field)
+        generator = TFDataset(parser=parser, file_path='tests/data/raw_datasets', file_suffix='varnum.input')
         self.pass_allway_dataset(generator, 4)
+
+    def test_text_seq2seq_model(self):
+        # init token_dicts
+        token_dicts = TokenDicts('tests/data/dicts', {'query': 0})
+        data_field_list = []
+        #param = ["name", "processor", "type", "dtype", "shape", "max_len", "token_dict_name"]
+        data_field_list.append(DataSchema(name='query', processor='to_tokenid', type=tf.int32,
+                                          dtype='int32', shape=(None,), is_with_len=False, token_dict_name='query'))
+        label_field = DataSchema(
+            name='label', processor='to_tokenid', type=tf.int32, dtype='int32', shape=(None,), is_with_len=False, token_dict_name='query')
+        parser = TextlineParser(token_dicts, data_field_list, label_field)
+        generator = TFDataset(parser=parser, file_path='tests/data/raw_datasets', file_suffix='text_seq2seq.input')
+        dataset = generator.generate_dataset(
+            batch_size=12, num_epochs=1, is_shuffle=False)
+        for (batchs, (inputs, targets)) in enumerate(dataset):
+            print('bacths', batchs, 'inputs', inputs, 'targets', targets)
+
+    def test_tfrecord_dataset_varnum_writer_and_reader(self):
+        token_dicts = None
+        data_field_list = []
+        data_field_list.append(DataSchema(name='query', processor='to_np', type=tf.int32,
+                                          dtype='int32', shape=(None,), is_with_len=True))
+        label_field = DataSchema(name='label', processor='to_np',
+                                 type=tf.float32, dtype='float32', shape=(1,), is_with_len=False)
+        parser = TextlineParser(token_dicts, data_field_list, label_field)
+        generator = TFDataset(parser=parser, file_path='tests/data/raw_datasets', file_suffix='varnum.input')
+        generator.to_tfrecords('outputs/file.tfrecord')
+        generator = TFDataset(parser=parser, file_path='outputs', file_suffix='.tfrecord', file_system='tfrecord')
+        dataset = generator.generate_dataset(batch_size=1, num_epochs=1)
+        for d in dataset.take(4):
+            print(d)
 
 
 if __name__ == '__main__':

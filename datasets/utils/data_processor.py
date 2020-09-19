@@ -19,9 +19,11 @@ import numpy as np
 
 __all__ = ['data_processor_dicts']
 
+
 def to_np(x, dtype):
     x_data = [i if i != 'None' else 0 for i in x.split(' ')]
     return np.asarray(x_data, dtype=dtype)
+
 
 def to_tokenid(x, dict_name, token_dicts):
     x_data = [token_dicts.to_id(dict_name, token) for token in x.split(' ')]
@@ -29,6 +31,8 @@ def to_tokenid(x, dict_name, token_dicts):
 
 # ref:https://docs.scipy.org/doc/numpy/reference/generated/numpy.pad.html
 # @ TODO fix pad_width
+
+
 def padding_seq(tokens, pad_width, pad_suffix=True, mode='constant', **kwargs):
     if len(tokens) >= pad_width:
         return tokens[0:pad_width]
@@ -38,7 +42,11 @@ def padding_seq(tokens, pad_width, pad_suffix=True, mode='constant', **kwargs):
     else:
         return np.pad(tokens, (padding_num, 0), mode, **kwargs)
 
+
 data_processor_dicts = {
     'to_np': lambda x, schema, token_dicts: to_np(x, schema.dtype),
-    'to_tokenid': lambda x, schema, token_dicts: to_tokenid(x, schema.token_dict_name, token_dicts)
+    'to_tokenid': lambda x, schema, token_dicts: to_tokenid(x, schema.token_dict_name, token_dicts),
+    'to_tokenid_start': lambda x, schema, token_dicts: to_tokenid('<s> ' + x, schema.token_dict_name, token_dicts),
+    'to_tokenid_end': lambda x, schema, token_dicts: to_tokenid(x + r' <\s>', schema.token_dict_name, token_dicts),
+    'to_sentenceid': lambda x, schema, token_dicts: to_tokenid('<s> ' + x + r' <\s>', schema.token_dict_name, token_dicts)
 }
