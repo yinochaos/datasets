@@ -34,7 +34,9 @@ class TestDatasets(unittest.TestCase):
 
     def pass_allway_dataset(self, generator, batch_size=4):
         print('is_training = True ', 'weight_fn=1')
-        def weight_fn(x): return 1
+
+        def weight_fn(x):
+            return 1
         generator.parser.set_weight_fn(weight_fn)
         dataset = generator.generate_dataset(batch_size, 1, is_training=True)
         self.pass_dataset(True, True, dataset)
@@ -80,7 +82,7 @@ class TestDatasets(unittest.TestCase):
         # init token_dicts
         token_dicts = TokenDicts('tests/data/dicts', {'query': 0})
         data_field_list = []
-        #param = ["name", "processor", "type", "dtype", "shape", "max_len", "token_dict_name"]
+        # param = ["name", "processor", "type", "dtype", "shape", "max_len", "token_dict_name"]
         data_field_list.append(DataSchema(name='query', processor='to_tokenid', type=tf.int32,
                                           dtype='int32', shape=(None,), is_with_len=True, token_dict_name='query'))
         data_field_list.append(DataSchema(
@@ -109,7 +111,7 @@ class TestDatasets(unittest.TestCase):
         # init token_dicts
         token_dicts = TokenDicts('tests/data/dicts', {'query': 0})
         data_field_list = []
-        #param = ["name", "processor", "type", "dtype", "shape", "max_len", "token_dict_name"]
+        # param = ["name", "processor", "type", "dtype", "shape", "max_len", "token_dict_name"]
         data_field_list.append(DataSchema(name='query', processor='to_tokenid', type=tf.int32,
                                           dtype='int32', shape=(None,), is_with_len=False, token_dict_name='query'))
         label_field = DataSchema(

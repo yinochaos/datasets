@@ -22,8 +22,7 @@ import tensorflow as tf
 __all__ = ['DataSchema', 'load_local_filelist', 'load_hdfs_filelist', 'data_schemas2types',
            'data_schemas2shapes', 'is_batch_padding', 'get_variable_shape_index']
 
-#
-#shape : [12,10,12]
+# shape : [12,10,12]
 param = ["name", "processor", "type", "dtype", "shape",
          "token_dict_name", "is_with_len", "max_len"]
 DataSchema = namedtuple('DataSchema', field_names=param)

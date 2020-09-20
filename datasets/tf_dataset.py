@@ -24,10 +24,8 @@ import subprocess
 import tensorflow as tf
 import codecs
 import pickle
-#import logging
 
-from datasets.utils import TokenDicts, DataSchema, data_processor_dicts
-from datasets.utils.common_struct import get_variable_shape_index, is_batch_padding, data_schemas2shapes, data_schemas2types
+from datasets.utils.common_struct import data_schemas2shapes, data_schemas2types
 from datasets.utils.common_struct import load_hdfs_filelist, load_local_filelist
 
 
@@ -137,7 +135,6 @@ class TFDataset(object):
             batch
         """
         for filename in self.filenames:
-            #logging.info("deal file %s" % (filename))
             for line in self.read_input_lines(filename):
                 result = self.parser.parse(line)
                 if result is None:
@@ -161,7 +158,6 @@ class TFDataset(object):
             batch
         """
         for filename in self.filenames:
-            #logging.info("deal file %s" % (filename))
             for line in self.read_input_lines(filename):
                 label, _, features, weight = self.parser.parse(line)
                 # output datas
@@ -185,7 +181,6 @@ class TFDataset(object):
             batch
         """
         for filename in self.filenames:
-            #logging.info("deal file %s" % (filename))
             for line in self.read_input_lines(filename):
                 label, _, features, weight = self.parser.parse(line)
                 # output datas

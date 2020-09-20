@@ -18,14 +18,6 @@
 """raw multi-inputs dataset generator class
 """
 from __future__ import absolute_import, division, print_function
-import os
-import subprocess
-import tensorflow as tf
-import codecs
-#from collections import namedtuple
-import logging
-
-from datasets.utils import TokenDicts, DataSchema, data_processor_dicts
 from datasets.utils.common_struct import get_variable_shape_index, is_batch_padding
 
 
@@ -62,7 +54,7 @@ class Parser(object):
                         self.label_range += 2
                     else:
                         self.label_range += 1
-                #print('range',self.label_range, field)
+                # print('range',self.label_range, field)
         self.flat_feature_names = []
         self.features_dict = {}
         for field in feature_field:

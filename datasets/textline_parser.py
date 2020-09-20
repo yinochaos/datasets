@@ -19,15 +19,9 @@
 """
 
 from __future__ import absolute_import, division, print_function
-import os
-import subprocess
 import numpy as np
-import tensorflow as tf
-import codecs
-#from collections import namedtuple
-import logging
 
-from datasets.utils import TokenDicts, DataSchema, data_processor_dicts
+from datasets.utils import data_processor_dicts
 from datasets.parser import Parser
 
 
@@ -73,9 +67,6 @@ class TextlineParser(Parser):
         elif self.label_range > 1:
             label = datas[:self.label_range]
             features = datas[self.label_range:]
-            #print('datas', datas,'range', self.label_range)
-            #print('label', label, 'feat', features)
-            #print(len(label), len(features), len(datas))
         else:
             features = datas
         if len(features) == 1:

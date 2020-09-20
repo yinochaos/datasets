@@ -5,9 +5,9 @@
 
 import unittest
 
-from datasets.dataset import Dataset
 from datasets.utils.token_dicts import TokenDicts
 import tensorflow as tf
+
 
 class TestDatasets(unittest.TestCase):
     """Tests for `datasets` package."""
@@ -24,7 +24,9 @@ class TestDatasets(unittest.TestCase):
     def test_raw_query_float_dataset(self):
         """Test something."""
         # init token_dicts
-        token_dicts = TokenDicts('tests/data/dicts', {'query':0})
-        
+        token_dicts = TokenDicts('tests/data/dicts', {'query': 0})
+        assert token_dicts is not None
+
+
 if __name__ == '__main__':
     unittest.main()

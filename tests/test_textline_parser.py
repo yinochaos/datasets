@@ -9,8 +9,7 @@ import unittest
 import numpy as np
 import tensorflow as tf
 
-from datasets.raw_dataset import RawDataset
-from datasets.utils import TokenDicts, DataSchema
+from datasets.utils import DataSchema
 from datasets import TextlineParser
 
 
@@ -30,18 +29,12 @@ class TestDatasets(unittest.TestCase):
         # init token_dicts
         token_dicts = None
         feature_field_list = []
-        #param = ["name", "processor", "type", "dtype", "shape", "max_len", "token_dict_name"]
+        # param = ["name", "processor", "type", "dtype", "shape", "max_len", "token_dict_name"]
         feature_field_list.append(DataSchema(name='query', processor='to_np', type=tf.int32,
                                              dtype='int32', shape=(None,), is_with_len=True))
-        # feature_field_list.append(DataSchema(
-        #    name='width', processor='to_np', type=tf.float32, dtype='float32', shape=(4)))
-        # label_field = DataSchema(
-        #    name='label', processor='to_np', type=tf.float32, dtype='float32', shape=(1,))
-    # def __init__(self, file_path, token_dicts, feature_field_list, label_field,  \
-    #             file_system='local', file_suffix=None,  weight_fn=None):
         parser = TextlineParser(token_dicts, feature_field_list)
         line = '12\t1 2 3 4 5'
-        label, addinfo, features = parser.parse(line)
+        label, addinfo, features, _ = parser.parse(line)
         assert label is None
         self.assertListEqual(addinfo, ['12'])
         np.testing.assert_array_equal(features[0], np.asarray([1, 2, 3, 4, 5]))
@@ -50,16 +43,13 @@ class TestDatasets(unittest.TestCase):
         # init token_dicts
         token_dicts = None
         feature_field_list = []
-        #param = ["name", "processor", "type", "dtype", "shape", "max_len", "token_dict_name"]
+        # param = ["name", "processor", "type", "dtype", "shape", "max_len", "token_dict_name"]
         feature_field_list.append(DataSchema(name='query', processor='to_np', type=tf.int32,
                                              dtype='int32', shape=(None,), is_with_len=False))
-        # feature_field_list.append(DataSchema(
-        #    name='width', processor='to_np', type=tf.float32, dtype='float32', shape=(4)))
         label_field = DataSchema(name='label', processor='to_np', type=tf.float32, dtype='float32', shape=(1,))
         parser = TextlineParser(token_dicts, feature_field_list, label_field)
         line = '12\t2\t1 2 3 4 5'
-        label, addinfo, features = parser.parse(line)
-        #print('label',label, features)
+        label, addinfo, features, _ = parser.parse(line)
         np.testing.assert_array_equal(label, np.asarray([2.0]))
         self.assertListEqual(addinfo, ['12'])
         np.testing.assert_array_equal(features, np.asarray([1, 2, 3, 4, 5]))
@@ -68,7 +58,7 @@ class TestDatasets(unittest.TestCase):
         # init token_dicts
         token_dicts = None
         feature_field_list = []
-        #param = ["name", "processor", "type", "dtype", "shape", "max_len", "token_dict_name"]
+        # param = ["name", "processor", "type", "dtype", "shape", "max_len", "token_dict_name"]
         feature_field_list.append(DataSchema(name='query', processor='to_np', type=tf.int32,
                                              dtype='int32', shape=(None,), is_with_len=True))
         feature_field_list.append(DataSchema(
@@ -76,8 +66,8 @@ class TestDatasets(unittest.TestCase):
         label_field = DataSchema(name='label', processor='to_np', type=tf.float32, dtype='float32', shape=(1,))
         parser = TextlineParser(token_dicts, feature_field_list, label_field)
         line = '12\t2\t1 2 3 4 5\t1 2 3 4'
-        label, addinfo, features = parser.parse(line)
-        #print('label',label, features)
+        label, addinfo, features, _ = parser.parse(line)
+        # print('label',label, features)
         np.testing.assert_array_equal(label, np.asarray([2.0]))
         self.assertListEqual(addinfo, ['12'])
         np.testing.assert_array_equal(features[0], np.asarray([1, 2, 3, 4, 5]))
@@ -87,7 +77,7 @@ class TestDatasets(unittest.TestCase):
         # init token_dicts
         token_dicts = None
         feature_field_list = []
-        #param = ["name", "processor", "type", "dtype", "shape", "max_len", "token_dict_name"]
+        # param = ["name", "processor", "type", "dtype", "shape", "max_len", "token_dict_name"]
         feature_field_list.append(DataSchema(name='query', processor='to_np', type=tf.int32,
                                              dtype='int32', shape=(None,), is_with_len=True))
         feature_field_list.append(DataSchema(
@@ -97,8 +87,8 @@ class TestDatasets(unittest.TestCase):
 
         parser = TextlineParser(token_dicts, feature_field_list, label_field, additive_schema=['id', 'session'])
         line = '12\tcuid\t2\t2 3 4\t1 2 3 4 5\t1 2 3 4'
-        label, addinfo, features = parser.parse(line)
-        #print('label',label, features)
+        label, addinfo, features, _ = parser.parse(line)
+        # print('label',label, features)
         assert len(label) == 3
         np.testing.assert_array_equal(label[0], np.asarray([2.0]))
         np.testing.assert_array_equal(label[1], np.asarray([2, 3, 4]))
@@ -112,7 +102,7 @@ class TestDatasets(unittest.TestCase):
         # init token_dicts
         token_dicts = None
         feature_field_list = []
-        #param = ["name", "processor", "type", "dtype", "shape", "max_len", "token_dict_name"]
+        # param = ["name", "processor", "type", "dtype", "shape", "max_len", "token_dict_name"]
         feature_field_list.append(DataSchema(name='query', processor='to_np', type=tf.int32,
                                              dtype='int32', shape=(None,), is_with_len=True))
         feature_field_list.append(DataSchema(
@@ -122,8 +112,8 @@ class TestDatasets(unittest.TestCase):
 
         parser = TextlineParser(token_dicts, feature_field_list, label_field, additive_schema=['id', 'session'])
         line = '12\tcuid\t2\t2 3 4\t1 2 3 4 5\t1 2 3 4'
-        label, addinfo, features = parser.parse(line)
-        #print('label',label, features)
+        label, addinfo, features, _ = parser.parse(line)
+        # print('label',label, features)
         assert len(label) == 3
         np.testing.assert_array_equal(label[0], np.asarray([2.0]))
         np.testing.assert_array_equal(label[1], np.asarray([2, 3, 4]))
@@ -136,7 +126,7 @@ class TestDatasets(unittest.TestCase):
         # init token_dicts
         token_dicts = None
         feature_field_list = []
-        #param = ["name", "processor", "type", "dtype", "shape", "max_len", "token_dict_name"]
+        # param = ["name", "processor", "type", "dtype", "shape", "max_len", "token_dict_name"]
         feature_field_list.append(DataSchema(name='query', processor='to_np', type=tf.int32,
                                              dtype='int32', shape=(None,), is_with_len=True))
         feature_field_list.append(DataSchema(
@@ -146,8 +136,8 @@ class TestDatasets(unittest.TestCase):
 
         parser = TextlineParser(token_dicts, feature_field_list, label_field, additive_schema=['id', 'session'])
         line = '12\tcuid\t2\t2 3 4\t1 2 3 4 5\t1 2 3 4'
-        label, addinfo, features = parser.parse(line)
-        #print('label',label, features)
+        label, addinfo, features, _ = parser.parse(line)
+        # print('label',label, features)
         assert len(label) == 1
         np.testing.assert_array_equal(label, np.asarray([2.0]))
         self.assertListEqual(addinfo, ['12', 'cuid'])

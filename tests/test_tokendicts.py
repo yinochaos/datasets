@@ -3,12 +3,13 @@
 """Tests for `datasets` package."""
 
 import unittest
-import sklearn
+# import sklearn
 from datasets.utils.token_dicts import TokenDicts
 
 
 def make_pkl_dict():
     dict_path = 'tests/data/dict/time.pkl'
+    return dict_path
 
 
 class TestDatasets(unittest.TestCase):

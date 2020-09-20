@@ -4,13 +4,12 @@ import sys
 import os
 import tensorflow as tf
 from concurrent.futures import ThreadPoolExecutor
-from datasets.utils import TokenDicts, DataSchema, data_processor_dicts
-from datasets.raw_dataset import RawDataset
+from datasets.utils import DataSchema
+from datasets import TFDataset, TextlineParser
 
 
 def convert2tfrecords(dataset_file_path, file_suffix, tfrecord_file_path, n_workers):
     filenames = os.listdir(dataset_file_path)
-    #filenames = map(lambda x: os.path.join(dataset_file_path, x), filenames)
     if file_suffix is None:
         filenames = [f for f in list(filenames)]
     else:
@@ -18,18 +17,18 @@ def convert2tfrecords(dataset_file_path, file_suffix, tfrecord_file_path, n_work
 
     def processor(filepath, filename, tfrecord_filename):
         token_dicts = None
-        data_filed_list = []
-        data_filed_list.append(DataSchema(name='query', processor='to_np', type=tf.int32,
+        data_field_list = []
+        data_field_list.append(DataSchema(name='query', processor='to_np', type=tf.int32,
                                           dtype='int32', shape=(None,), is_with_len=True))
         label_field = DataSchema(name='label', processor='to_np',
                                  type=tf.float32, dtype='float32', shape=(1,), is_with_len=False)
-        generator = RawDataset(file_path=filepath, token_dicts=token_dicts,
-                               data_field_list=data_filed_list, label_field=label_field, file_suffix=filename)
+        parser = TextlineParser(token_dicts, data_field_list, label_field)
+        generator = TFDataset(parser=parser, file_path=filepath, file_suffix=filename)
         generator.to_tfrecords(tfrecord_filename)
         return tfrecord_filename
 
-    task_param_list = [tuple(dataset_file_path, filename, tfrecord_file_path + '/' +
-                             str(i) + '.tfrecord') for filename, i in zip(filenames, len(filenames))]
+    task_param_list = [tuple(dataset_file_path, filename, tfrecord_file_path + '/' + str(i) + '.tfrecord')
+                       for filename, i in zip(filenames, len(filenames))]
     pool = ThreadPoolExecutor(max_workers=n_workers)
     for result in pool.map(processor, task_param_list):
         print(result, 'finish')

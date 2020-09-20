@@ -23,12 +23,10 @@ import os
 import torch
 import subprocess
 import codecs
-import logging
 import pickle
-import quickle
-import lmdb
+# import quickle
+# import lmdb
 
-from datasets.utils import TokenDicts, DataSchema, data_processor_dicts
 from datasets.utils.common_struct import load_hdfs_filelist, load_local_filelist
 
 
@@ -115,6 +113,8 @@ class PTDataset(torch.utils.data.IterableDataset):
                     except EOFError:
                         break
         elif self.file_system == 'lmdb':
+            pass
+            """
             with lmdb.open(filename) as env:
                 with env.begin() as txn:
                     cursor = txn.cursor()
@@ -124,6 +124,7 @@ class PTDataset(torch.utils.data.IterableDataset):
                                 yield d
                         else:
                             yield data
+            """
 
     def __iter__(self):
         if self.file_format == 'text':
