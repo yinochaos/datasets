@@ -1,1 +1,6 @@
 tensorflow
+numpy
+torch
+sklearn
+lmdb
+quickle
