@@ -1,10 +1,8 @@
 # datasets
 
-![image](https://img.shields.io/pypi/v/datasets.svg%0A%20%20%20%20%20:target:%20https://pypi.python.org/pypi/datasets)
-
-![image](https://img.shields.io/travis/yinochaos/datasets.svg%0A%20%20%20%20%20:target:%20https://travis-ci.com/yinochaos/datasets)
-
-![image](https://readthedocs.org/projects/datasets/badge/?version=latest%0A%20%20%20%20%20:target:%20https://datasets.readthedocs.io/en/latest/?badge=latest%0A%20%20%20%20%20:alt:%20Documentation%20Status)
+![image](https://img.shields.io/pypi/v/ml-dataset.svg%0A%20%20%20%20%20:target:%20https://pypi.python.org/pypi/ml-dataset)
+[![Build Status](https://travis-ci.com/yinochaos/datasets.svg?branch=master)](https://travis-ci.com/yinochaos/datasets)
+[![Documentation Status](https://readthedocs.org/projects/ml-dataset/badge/?version=latest)](https://ml-dataset.readthedocs.io/en/latest/?badge=latest)
 
 -   Free software: Apache Software License 2.0
 -   Documentation: <https://ml-dataset.readthedocs.io>.
