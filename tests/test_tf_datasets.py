@@ -5,6 +5,7 @@
 """
 
 import unittest
+import os
 import tensorflow as tf
 
 from datasets import TextlineParser
@@ -132,6 +133,7 @@ class TestDatasets(unittest.TestCase):
                                  type=tf.float32, dtype='float32', shape=(1,), is_with_len=False)
         parser = TextlineParser(token_dicts, data_field_list, label_field)
         generator = TFDataset(parser=parser, file_path='tests/data/raw_datasets', file_suffix='varnum.input')
+        os.mkdir('outputs')
         generator.to_tfrecords('outputs/file.tfrecord')
         generator = TFDataset(parser=parser, file_path='outputs', file_suffix='.tfrecord', file_system='tfrecord')
         dataset = generator.generate_dataset(batch_size=1, num_epochs=1)
