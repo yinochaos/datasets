@@ -25,7 +25,7 @@ import tensorflow as tf
 import codecs
 import pickle
 
-from datasets.utils.common_struct import data_schemas2shapes, data_schemas2types
+from datasets.utils.common_struct import data_schemas2shapes, data_schemas2types, type2tf_dict
 from datasets.utils.common_struct import load_hdfs_filelist, load_local_filelist
 
 
@@ -60,6 +60,7 @@ class TFDataset(object):
     def __init__(self, parser, file_path, file_system='local', file_suffix=None, filenames=None):
         self.file_system = file_system
         self.parser = parser
+        self.check_schemalist(parser.feature_field + parser.label_field)
         if self.file_system == 'HDFS':
             self.hadoop = os.environ.get('HADOOP')
             if self.hadoop is None:
@@ -71,6 +72,11 @@ class TFDataset(object):
         else:
             self.filenames = filenames
         self.file_suffix = file_suffix
+
+    def check_schemalist(self, schema_list):
+        for schema in schema_list:
+            if schema.dtype not in type2tf_dict:
+                raise ValueError("schema  %s :%s is not valid" % (schema.name, schema.dtype))
 
     ##
     # @brief
@@ -278,13 +284,13 @@ class TFDataset(object):
             data = tf.io.parse_single_example(example_proto, feature_description)
             features = []
             for field in self.parser.features_dict.values():
-                features.append(tf.io.parse_tensor(data[field.name], field.type))
+                features.append(tf.io.parse_tensor(data[field.name], type2tf_dict[field.dtype]))
                 if field.is_with_len:
                     features.append(tf.io.parse_tensor(data[field.name + '_len'], tf.int32))
             if self.parser.has_label:
                 labels = []
                 for field in self.parser.label_dict.values():
-                    labels.append(tf.io.parse_tensor(data[field.name], field.type))
+                    labels.append(tf.io.parse_tensor(data[field.name], type2tf_dict[field.dtype]))
                     if field.is_with_len:
                         features.append(tf.io.parse_tensor(data[field.name + '_len'], tf.int32))
                 return tuple(features), tuple(labels)

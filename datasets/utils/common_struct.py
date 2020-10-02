@@ -19,14 +19,22 @@ import subprocess
 import os
 import tensorflow as tf
 
-__all__ = ['DataSchema', 'load_local_filelist', 'load_hdfs_filelist', 'data_schemas2types',
+__all__ = ['DataSchema', 'load_local_filelist', 'type2tf_dict', 'load_hdfs_filelist', 'data_schemas2types',
            'data_schemas2shapes', 'is_batch_padding', 'get_variable_shape_index']
 
 # shape : [12,10,12]
-param = ["name", "processor", "type", "dtype", "shape",
-         "token_dict_name", "is_with_len", "max_len"]
+param = ["name", "processor", "dtype", "shape", "token_dict_name", "is_with_len", "max_len"]
 DataSchema = namedtuple('DataSchema', field_names=param)
 DataSchema.__new__.__defaults__ = tuple([None] * len(param))
+
+type2tf_dict = {
+    "int": tf.int32,
+    "int32": tf.int32,
+    "int64": tf.int64,
+    "float": tf.float32,
+    "float32": tf.float32,
+    "float64": tf.float64
+}
 
 
 def load_hdfs_filelist(datadir, file_suffix, hadoop):
@@ -55,7 +63,7 @@ def load_local_filelist(datadir, file_suffix):
 
 def data_schemas2types(datafield_list):
     def data_schema2types(data_schema):
-        types = data_schema.type
+        types = type2tf_dict[data_schema.dtype]
         if data_schema.is_with_len:
             return [types, tf.int32]
         else:

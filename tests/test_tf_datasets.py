@@ -84,12 +84,10 @@ class TestDatasets(unittest.TestCase):
         token_dicts = TokenDicts('tests/data/dicts', {'query': 0})
         data_field_list = []
         # param = ["name", "processor", "type", "dtype", "shape", "max_len", "token_dict_name"]
-        data_field_list.append(DataSchema(name='query', processor='to_tokenid', type=tf.int32,
+        data_field_list.append(DataSchema(name='query', processor='to_tokenid',
                                           dtype='int32', shape=(None,), is_with_len=True, token_dict_name='query'))
-        data_field_list.append(DataSchema(
-            name='width', processor='to_np', type=tf.float32, dtype='float32', shape=(4)))
-        label_field = DataSchema(
-            name='label', processor='to_np', type=tf.float32, dtype='float32', shape=(1,))
+        data_field_list.append(DataSchema(name='width', processor='to_np', dtype='float32', shape=(4)))
+        label_field = DataSchema(name='label', processor='to_np', dtype='float32', shape=(1,))
         parser = TextlineParser(token_dicts, data_field_list, label_field)
         generator = TFDataset(parser=parser, file_path='tests/data/raw_datasets', file_suffix='query_float.input')
         dataset = generator.generate_dataset(
@@ -100,10 +98,9 @@ class TestDatasets(unittest.TestCase):
     def test_raw_dataset_varnum(self):
         token_dicts = None
         data_field_list = []
-        data_field_list.append(DataSchema(name='query', processor='to_np', type=tf.int32,
+        data_field_list.append(DataSchema(name='query', processor='to_np',
                                           dtype='int32', shape=(None,), is_with_len=True))
-        label_field = DataSchema(name='label', processor='to_np',
-                                 type=tf.float32, dtype='float32', shape=(1,), is_with_len=False)
+        label_field = DataSchema(name='label', processor='to_np', dtype='float32', shape=(1,), is_with_len=False)
         parser = TextlineParser(token_dicts, data_field_list, label_field)
         generator = TFDataset(parser=parser, file_path='tests/data/raw_datasets', file_suffix='varnum.input')
         self.pass_allway_dataset(generator, 4)
@@ -113,10 +110,9 @@ class TestDatasets(unittest.TestCase):
         token_dicts = TokenDicts('tests/data/dicts', {'query': 0})
         data_field_list = []
         # param = ["name", "processor", "type", "dtype", "shape", "max_len", "token_dict_name"]
-        data_field_list.append(DataSchema(name='query', processor='to_tokenid', type=tf.int32,
+        data_field_list.append(DataSchema(name='query', processor='to_tokenid',
                                           dtype='int32', shape=(None,), is_with_len=False, token_dict_name='query'))
-        label_field = DataSchema(
-            name='label', processor='to_tokenid', type=tf.int32, dtype='int32', shape=(None,), is_with_len=False, token_dict_name='query')
+        label_field = DataSchema(name='label', processor='to_tokenid', dtype='int32', shape=(None,), is_with_len=False, token_dict_name='query')
         parser = TextlineParser(token_dicts, data_field_list, label_field)
         generator = TFDataset(parser=parser, file_path='tests/data/raw_datasets', file_suffix='text_seq2seq.input')
         dataset = generator.generate_dataset(
@@ -127,13 +123,12 @@ class TestDatasets(unittest.TestCase):
     def test_tfrecord_dataset_varnum_writer_and_reader(self):
         token_dicts = None
         data_field_list = []
-        data_field_list.append(DataSchema(name='query', processor='to_np', type=tf.int32,
-                                          dtype='int32', shape=(None,), is_with_len=True))
-        label_field = DataSchema(name='label', processor='to_np',
-                                 type=tf.float32, dtype='float32', shape=(1,), is_with_len=False)
+        data_field_list.append(DataSchema(name='query', processor='to_np', dtype='int32', shape=(None,), is_with_len=True))
+        label_field = DataSchema(name='label', processor='to_np', dtype='float32', shape=(1,), is_with_len=False)
         parser = TextlineParser(token_dicts, data_field_list, label_field)
         generator = TFDataset(parser=parser, file_path='tests/data/raw_datasets', file_suffix='varnum.input')
-        os.mkdir('outputs')
+        if not os.path.exists('outputs'):
+            os.mkdir('outputs')
         generator.to_tfrecords('outputs/file.tfrecord')
         generator = TFDataset(parser=parser, file_path='outputs', file_suffix='.tfrecord', file_system='tfrecord')
         dataset = generator.generate_dataset(batch_size=1, num_epochs=1)
