@@ -4,3 +4,5 @@ torch
 sklearn
 lmdb
 quickle
+soundfile
+python_speech_features

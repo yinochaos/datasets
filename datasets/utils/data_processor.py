@@ -16,6 +16,8 @@
 # ==============================================================================
 from __future__ import absolute_import, division, print_function
 import numpy as np
+import soundfile as sf
+import python_speech_features
 
 __all__ = ['data_processor_dicts']
 
@@ -43,10 +45,63 @@ def padding_seq(tokens, pad_width, pad_suffix=True, mode='constant', **kwargs):
         return np.pad(tokens, (padding_num, 0), mode, **kwargs)
 
 
+def to_fe_mfcc(x):
+    """
+    ref : https://python-speech-features.readthedocs.io/en/latest/
+    Compute MFCC features from an audio signal.
+    @param x: wav file
+    return mfcc: shape[NUMFRAMES,numcep]
+    """
+    signal, samplerate = sf.read(x)
+    mfcc = python_speech_features.base.mfcc(signal, samplerate=samplerate, winlen=0.025, winstep=0.01, numcep=13, nfilt=26, nffft=512, lowfreq=0,
+                                            highfreq=None, preemph=0.97, ceplifter=22, appendEnergy=True, winfunc=np.hanmming)
+    return mfcc
+
+def to_fe_fbank(x):
+    """
+    Compute Mel-filterbank energy features from an audio signal.
+    @param x: wav file
+    return fbank: shape[NUMFRAMES, nfilt]
+    """
+    signal, samplerate = sf.read(x)
+    fbank,_ = python_speech_features.base.fbank(signal, samplerate=samplerate, winlen=0.025, winstep=0.01, nfilt=26, nffft=512, lowfreq=0,
+                                            highfreq=None, preemph=0.97, winfunc=np.hanmming)
+    return fbank
+
+
+def to_fe_logfbank(x):
+    """
+    Compute log Mel-filterbank energy features from an audio signal.
+    @param x: wav file
+    return logfbank: shape[NUMFRAMES, nfilt]
+    """
+    signal, samplerate = sf.read(x)
+    logfbank = python_speech_features.base.logfbank(signal, samplerate=samplerate, winlen=0.025, winstep=0.01, nfilt=26, nffft=512, lowfreq=0,
+                                            highfreq=None, preemph=0.97)
+    return logfbank
+
+
+def to_fe_ssc(x):
+    """
+    Compute Spectral Subband Centroid features from an audio signal
+    @param x: wav file
+    return logfbank: shape[NUMFRAMES, nfilt]
+    """
+    signal, samplerate = sf.read(x)
+    logfbank = python_speech_features.base.logfbank(signal, samplerate=samplerate, winlen=0.025, winstep=0.01, nfilt=26, nffft=512, lowfreq=0,
+                                            highfreq=None, preemph=0.97)
+    return logfbank
+
+
 data_processor_dicts = {
     'to_np': lambda x, schema, token_dicts: to_np(x, schema.dtype),
     'to_tokenid': lambda x, schema, token_dicts: to_tokenid(x, schema.token_dict_name, token_dicts),
     'to_tokenid_start': lambda x, schema, token_dicts: to_tokenid('<s> ' + x, schema.token_dict_name, token_dicts),
     'to_tokenid_end': lambda x, schema, token_dicts: to_tokenid(x + r' <\s>', schema.token_dict_name, token_dicts),
-    'to_sentenceid': lambda x, schema, token_dicts: to_tokenid('<s> ' + x + r' <\s>', schema.token_dict_name, token_dicts)
+    'to_sentenceid': lambda x, schema, token_dicts: to_tokenid('<s> ' + x + r' <\s>', schema.token_dict_name, token_dicts),
+    'to_fe_mfcc': lambda x, _, _: to_fe_mfcc(x),
+    'to_fe_fbank': lambda x, _, _: to_fe_fbank(x),
+    'to_fe_logfbank': lambda x, _, _: to_fe_logfbank(x),
+    'to_fe_ssc': lambda x, _, _: to_fe_ssc(x),
+    'None':None
 }
