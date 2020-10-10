@@ -73,6 +73,16 @@ class TFDataset(object):
             self.filenames = filenames
         self.file_suffix = file_suffix
 
+        if  len(data_schemas2types(self.parser.label_field)) > 1:
+            self.is_multi_label = True
+        else:
+            self.is_multi_label = False
+
+        if  len(data_schemas2types(self.parser.feature_field)) > 1:
+            self.is_multi_features = True
+        else:
+            self.is_multi_features = False
+
     def check_schemalist(self, schema_list):
         for schema in schema_list:
             if schema.dtype not in type2tf_dict:
@@ -146,6 +156,8 @@ class TFDataset(object):
                 if result is None:
                     continue
                 label, additive_info, features, _ = result
+                if self.is_multi_label:
+                    label = tuple(label)
                 # output datas
                 if self.parser.label_field is not None:
                     yield additive_info, tuple(features), label
@@ -166,6 +178,8 @@ class TFDataset(object):
         for filename in self.filenames:
             for line in self.read_input_lines(filename):
                 label, _, features, weight = self.parser.parse(line)
+                if self.is_multi_label:
+                    label = tuple(label)
                 # output datas
                 if weight is not None:
                     # 用于sample_weights的dataset: (inputs, targets, sample_weights)
@@ -292,7 +306,7 @@ class TFDataset(object):
                 for field in self.parser.label_dict.values():
                     labels.append(tf.io.parse_tensor(data[field.name], type2tf_dict[field.dtype]))
                     if field.is_with_len:
-                        features.append(tf.io.parse_tensor(data[field.name + '_len'], tf.int32))
+                        labels.append(tf.io.parse_tensor(data[field.name + '_len'], tf.int32))
                 return tuple(features), tuple(labels)
             else:
                 return tuple(features)

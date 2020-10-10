@@ -84,8 +84,8 @@ class TokenDicts(object):
                 token_id = token_id + 1
                 token_dict[token] = token_id
         self.dicts[dict_name] = token_dict
-        self.dict_size[dict_name] = token_id + 1
         self.unkown_emb_id[dict_name] = token_id + 1
+        self.dict_size[dict_name] = token_id + 2
 
     def _text_to_emb_id(self, filename, dict_name):
         token_dict = {}
@@ -98,8 +98,8 @@ class TokenDicts(object):
                     token_id = token_id + 1
                     token_dict[token] = token_id
         self.dicts[dict_name] = token_dict
-        self.dict_size[dict_name] = token_id + 1
         self.unkown_emb_id[dict_name] = token_id + 1
+        self.dict_size[dict_name] = token_id + 2
 
     def dict_size_by_name(self, dict_name):
         """

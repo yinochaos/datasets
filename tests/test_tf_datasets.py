@@ -112,11 +112,10 @@ class TestDatasets(unittest.TestCase):
         # param = ["name", "processor", "type", "dtype", "shape", "max_len", "token_dict_name"]
         data_field_list.append(DataSchema(name='query', processor='to_tokenid',
                                           dtype='int32', shape=(None,), is_with_len=False, token_dict_name='query'))
-        label_field = DataSchema(name='label', processor='to_tokenid', dtype='int32', shape=(None,), is_with_len=False, token_dict_name='query')
+        label_field = DataSchema(name='label', processor='to_tokenid', dtype='int32', shape=(None,), is_with_len=True, token_dict_name='query')
         parser = TextlineParser(token_dicts, data_field_list, label_field)
         generator = TFDataset(parser=parser, file_path='tests/data/raw_datasets', file_suffix='text_seq2seq.input')
-        dataset = generator.generate_dataset(
-            batch_size=12, num_epochs=1, is_shuffle=False)
+        dataset = generator.generate_dataset(batch_size=12, num_epochs=1, is_shuffle=False)
         for (batchs, (inputs, targets)) in enumerate(dataset):
             print('bacths', batchs, 'inputs', inputs, 'targets', targets)
 
