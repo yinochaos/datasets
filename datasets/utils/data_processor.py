@@ -57,6 +57,7 @@ def to_fe_mfcc(x):
                                             highfreq=None, preemph=0.97, ceplifter=22, appendEnergy=True, winfunc=np.hanmming)
     return mfcc
 
+
 def to_fe_fbank(x):
     """
     Compute Mel-filterbank energy features from an audio signal.
@@ -64,8 +65,8 @@ def to_fe_fbank(x):
     return fbank: shape[NUMFRAMES, nfilt]
     """
     signal, samplerate = sf.read(x)
-    fbank,_ = python_speech_features.base.fbank(signal, samplerate=samplerate, winlen=0.025, winstep=0.01, nfilt=26, nffft=512, lowfreq=0,
-                                            highfreq=None, preemph=0.97, winfunc=np.hanmming)
+    fbank, _ = python_speech_features.base.fbank(signal, samplerate=samplerate, winlen=0.025, winstep=0.01, nfilt=26, nffft=512, lowfreq=0,
+                                                 highfreq=None, preemph=0.97, winfunc=np.hanmming)
     return fbank
 
 
@@ -77,7 +78,7 @@ def to_fe_logfbank(x):
     """
     signal, samplerate = sf.read(x)
     logfbank = python_speech_features.base.logfbank(signal, samplerate=samplerate, winlen=0.025, winstep=0.01, nfilt=26, nffft=512, lowfreq=0,
-                                            highfreq=None, preemph=0.97)
+                                                    highfreq=None, preemph=0.97)
     return logfbank
 
 
@@ -89,8 +90,61 @@ def to_fe_ssc(x):
     """
     signal, samplerate = sf.read(x)
     logfbank = python_speech_features.base.logfbank(signal, samplerate=samplerate, winlen=0.025, winstep=0.01, nfilt=26, nffft=512, lowfreq=0,
-                                            highfreq=None, preemph=0.97)
+                                                    highfreq=None, preemph=0.97)
     return logfbank
+
+
+def token_process(token_id, vocab_size, token_mask_id, mask_prob=0.8, keep_prob=0.1):
+    """以mask_prob的概率替换为[MASK]，以keep_prob的概率保持不变，否则替换为一个随机token
+    """
+    rand = np.random.random()
+    if rand <= mask_prob:
+        return token_mask_id
+    elif rand <= mask_prob + keep_prob:
+        return token_id
+    else:
+        return np.random.randint(1, vocab_size)  # 0 is padding id
+
+
+def gen_causal_attention_mask(x):
+    """
+    下三角为1的矩阵
+    e.g. x=np.ones([32,6,128])
+    mask =
+    array([[[[1, 0, 0, 0, 0, 0],
+                    [1, 1, 0, 0, 0, 0],
+                    [1, 1, 1, 0, 0, 0],
+                    [1, 1, 1, 1, 0, 0],
+                    [1, 1, 1, 1, 1, 0],
+                    [1, 1, 1, 1, 1, 1]]]], dtype=int32)
+    """
+    seq_len = x.shape[1]
+    idxs = np.arange(0, seq_len)
+    mask = idxs[None, :] <= idxs[:, None]
+    mask = np.asarray(mask, 'int32')
+    return mask[None, None]
+
+
+def gen_unilm_attention_mask(x):
+    """
+    (UNILM)Unified Language Model Pre-training for Natural Language Understanding and Generation
+    论文地址：https://arxiv.org/abs/1905.03197
+    论文代码：https://github.com/microsoft/unilm
+    next sentence :
+    >>> x=np.asarray([0,0,0,1,1,1])
+    >>> y=gen_unilm_attention_mask(x[None,:])
+    >>> y
+    array([[[[1, 1, 1, 0, 0, 0],
+                    [1, 1, 1, 0, 0, 0],
+                    [1, 1, 1, 0, 0, 0],
+                    [1, 1, 1, 1, 0, 0],
+                    [1, 1, 1, 1, 1, 0],
+                    [1, 1, 1, 1, 1, 1]]]], dtype=int32)
+    """
+    idxs = np.cumsum(x, axis=1)
+    mask = idxs[:, None, :] <= idxs[:, :, None]
+    mask = np.asarray(mask, 'int32')
+    return mask[:, None]
 
 
 data_processor_dicts = {
@@ -99,9 +153,9 @@ data_processor_dicts = {
     'to_tokenid_start': lambda x, schema, token_dicts: to_tokenid('<s> ' + x, schema.token_dict_name, token_dicts),
     'to_tokenid_end': lambda x, schema, token_dicts: to_tokenid(x + r' <\s>', schema.token_dict_name, token_dicts),
     'to_sentenceid': lambda x, schema, token_dicts: to_tokenid('<s> ' + x + r' <\s>', schema.token_dict_name, token_dicts),
-    'to_fe_mfcc': lambda x, _, _: to_fe_mfcc(x),
-    'to_fe_fbank': lambda x, _, _: to_fe_fbank(x),
-    'to_fe_logfbank': lambda x, _, _: to_fe_logfbank(x),
-    'to_fe_ssc': lambda x, _, _: to_fe_ssc(x),
-    'None':None
+    'to_fe_mfcc': lambda x, _, __: to_fe_mfcc(x),
+    'to_fe_fbank': lambda x, _, __: to_fe_fbank(x),
+    'to_fe_logfbank': lambda x, _, __: to_fe_logfbank(x),
+    'to_fe_ssc': lambda x, _, __: to_fe_ssc(x),
+    'None': None
 }

@@ -2,12 +2,14 @@
 import argparse
 import sys
 import os
+from functools import wraps
+from concurrent.futures import ThreadPoolExecutor
 import tensorflow as tf
 import numpy as np
-from concurrent.futures import ThreadPoolExecutor
+
 from datasets.utils import DataSchema
 from datasets import TFDataset, TextlineParser
-from functools import wraps
+from datasets.utils.common_struct import load_hdfs_filelist, load_local_filelist
 
 # color print ref : https://blog.csdn.net/qq_34857250/article/details/79673698
 
@@ -138,9 +140,9 @@ class CodeGenerator(object):
             pass
         """
         self.convert_dicts = {
-            'wav': ['mfcc2', 'audio', 'float', [None, 13]],
-            'pcm': ['mfcc2', 'audio', 'float', [None, 13]],
-            'mp3': ['mfcc2', 'audio', 'float', [None, 13]],
+            'wav': ['to_fe_mfcc', 'audio', 'float', [None, 13]],
+            'pcm': ['to_fe_mfcc', 'audio', 'float', [None, 13]],
+            'mp3': ['to_fe_mfcc', 'audio', 'float', [None, 13]],
             'jpg': ['img_read', 'img', 'float', None],
             'png': ['img_read', 'img', 'float', None],
             'JPG': ['img_read', 'img', 'float', None]
@@ -172,27 +174,39 @@ class CodeGenerator(object):
 
     def _write_token_dicts(self, f, label_schema, features_schema):
         dict_names = set()
+        name_dicts = {}
         for name, schema in zip(self.label_names, label_schema):
             if schema[0] in {'to_tokenid'}:
                 dict_name = name_input('input dict name for' + name + ' :')
                 dict_names.add(dict_name)
+                name_dicts[name] = dict_name
         for name, schema in zip(self.feature_names, features_schema):
             if schema[0] in {'to_tokenid'}:
                 dict_name = name_input('input dict name for feature :' + name + ' :')
                 dict_names.add(dict_name)
+                name_dicts[name] = dict_name
         if len(dict_names) == 0:
             f.write('token_dicts = None\n')
         else:
             name_list = '{' + ','.join(["'%s':0" % (x) for x in dict_names]) + '}'
             f.write('token_dicts = TokenDicts(\'dicts\', ' + name_list + ')\n')
+        # TODO 增加具体的dict生成的处理
+        return name_dicts
 
-    def _write_schema_list(self, f, schema_list, name_list, list_name):
+    def _write_schema_list(self, f, schema_list, name_list, list_name, name_dicts):
         f.write(list_name + ' = []\n')
         # data_field_list.append(DataSchema(
         #    name='width', processor='to_np', type=tf.float32, dtype='float32', shape=(4)))
         for name, schema in zip(name_list, schema_list):
             shape_text = ','.join([x if x else 'None' for x in schema[3]])
-            f.write("%s.append(DataSchema(name='%s', processor='%s', type='%s', shape=(%s)))\n" % (list_name, name, schema[0], schema[1], shape_text))
+            if shape_text == 'None':
+                shape_text = 'None,'
+            if name in name_dicts:
+                f.write("%s.append(DataSchema(name='%s', processor='%s', dtype='%s', shape=(%s), token_dict_name='%s'))\n" %
+                        (list_name, name, schema[0], schema[2], shape_text, name_dicts[name]))
+            else:
+                f.write("%s.append(DataSchema(name='%s', processor='%s', dtype='%s', shape=(%s)))\n" %
+                        (list_name, name, schema[0], schema[2], shape_text))
 
     def generate_code(self):
         workspace = name_input('输入代码生成目录 : ')
@@ -202,9 +216,10 @@ class CodeGenerator(object):
         data_file = filepath_input('输入数据文件')
         file_suffix = input('输入数据文件后缀 : ')
         file_suffix = file_suffix.strip()
-        #code_file = filepath_input('写入代码文件')
+        file_list = load_local_filelist(data_file, file_suffix)
+        assert len(file_list) > 0, "in %s can't find file with %s" % (data_file, file_suffix)
         lines = []
-        with open(data_file, 'r') as f:
+        with open(file_list[0], 'r') as f:
             for line in f:
                 lines.append(line.strip('\n'))
                 if len(lines) > 20:
@@ -213,7 +228,7 @@ class CodeGenerator(object):
             f.write('\n'.join(['import tensorflow as tf', 'from datasets import TextlineParser',
                                'from datasets import TFDataset', 'from datasets.utils import TokenDicts, DataSchema']))
             f.write('\n')
-            f.write("file_path = " + data_file + '\n')
+            f.write("file_path = '" + data_file + "'\n")
             if file_suffix == '':
                 f.write("file_suffix = None\n")
             else:
@@ -245,9 +260,9 @@ class CodeGenerator(object):
             print('add_info', self.add_info)
             print('label schema:', label_schema)
             print('feature schema:', features_schema)
-            self._write_token_dicts(f, label_schema, features_schema)
-            self._write_schema_list(f, label_schema, self.label_names, 'label_schema_list')
-            self._write_schema_list(f, features_schema, self.feature_names, 'feature_schema_list')
+            name_dicts = self._write_token_dicts(f, label_schema, features_schema)
+            self._write_schema_list(f, label_schema, self.label_names, 'label_schema_list', name_dicts)
+            self._write_schema_list(f, features_schema, self.feature_names, 'feature_schema_list', name_dicts)
             f.write("parser = TextlineParser(token_dicts, feature_schema_list, label_schema_list)\n")
             f.write("generator = TFDataset(parser=parser, file_path=file_path, file_suffix=file_suffix)\n")
             f.write("dataset = generator.generate_dataset(batch_size=batch_size, num_epochs=num_epochs, is_shuffle=is_shuffle)\n")
@@ -302,14 +317,8 @@ class CodeGenerator(object):
 
 def main():
     """Console script for datasets."""
-    #parser = argparse.ArgumentParser()
-    #parser.add_argument('_', nargs='*')
-    #args = parser.parse_args()
     code_generator = CodeGenerator()
     code_generator.generate_code()
-    #print("Arguments: " + str(args._))
-    # print("Replace this message by putting your code into "
-    #      "datasets.cli.main")
     return 0
 
 
