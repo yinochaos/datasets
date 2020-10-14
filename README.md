@@ -137,4 +137,39 @@ def pass_dataset(self, is_training, weight_fn, dataset):
                 print('batch_num', batch_num)
                 break
 ```
+# 交互式的自动代码生成
+运行 python -m datasets.cli 
+```
+$ python -m datasets.cli
+输入代码生成目录 : outputs
+请输入输入数据文件的文件路径:tests/data/raw_datasets/
+输入数据文件后缀 : header_text_seq2seq.input
+label schema: [['to_tokenid', 'text', 'int', [None]]]
+feature schema: [['to_tokenid', 'text', 'int', [None]]]
+input dict name forlabel :q
+input dict name for feature :query :q
+```
+然后在outputs文件夹下面生成dataset_reader.py，具体内容如下：
+```python
+import tensorflow as tf
+from datasets import TextlineParser
+from datasets import TFDataset
+from datasets.utils import TokenDicts, DataSchema
+file_path = 'tests/data/raw_datasets/'
+file_suffix = 'header_text_seq2seq.input'
+batch_size = 64
+num_epochs = 1
+is_shuffle = True
+token_dicts = TokenDicts('dicts', {'q':0})
+label_schema_list = []
+label_schema_list.append(DataSchema(name='label', processor='to_tokenid', dtype='int', shape=(None,), token_dict_name='q'))
+feature_schema_list = []
+feature_schema_list.append(DataSchema(name='query', processor='to_tokenid', dtype='int', shape=(None,), token_dict_name='q'))
+parser = TextlineParser(token_dicts, feature_schema_list, label_schema_list)
+generator = TFDataset(parser=parser, file_path=file_path, file_suffix=file_suffix)
+dataset = generator.generate_dataset(batch_size=batch_size, num_epochs=num_epochs, is_shuffle=is_shuffle)
+for _ in enumerate(dataset):
+    pass
+```
+
 
