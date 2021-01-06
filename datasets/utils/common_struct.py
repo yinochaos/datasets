@@ -23,7 +23,7 @@ __all__ = ['DataSchema', 'load_local_filelist', 'type2tf_dict', 'load_hdfs_filel
            'data_schemas2shapes', 'is_batch_padding', 'get_variable_shape_index']
 
 # shape : [12,10,12]
-param = ["name", "processor", "dtype", "shape", "token_dict_name", "is_with_len", "max_len"]
+param = ["name", "processor", "dtype", "shape", "token_dict_name", "is_with_len", "max_len", "has_session"]
 DataSchema = namedtuple('DataSchema', field_names=param)
 DataSchema.__new__.__defaults__ = tuple([None] * len(param))
 
