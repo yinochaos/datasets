@@ -7,14 +7,14 @@ from setuptools import setup, find_packages
 with open('README.md') as readme_file:
     readme = readme_file.read()
 
-#with open('HISTORY.md') as history_file:
+# with open('HISTORY.md') as history_file:
 #    history = history_file.read()
 
-requirements = [ ]
+requirements = ['tensorflow>=2.3.0', 'scipy', 'tdqm', 'python_speech_features', 'soundfile ']
 
-setup_requirements = [ ]
+setup_requirements = []
 
-test_requirements = [ ]
+test_requirements = []
 
 setup(
     author="yinochaos",
@@ -49,6 +49,6 @@ setup(
     test_suite='tests',
     tests_require=test_requirements,
     url='https://github.com/yinochaos/datasets',
-    version='0.0.10',
+    version='0.0.11',
     zip_safe=False,
 )
