@@ -18,6 +18,7 @@ from collections import namedtuple
 import subprocess
 import os
 import tensorflow as tf
+import numpy as np
 
 __all__ = ['DataSchema', 'load_local_filelist', 'type2tf_dict', 'load_hdfs_filelist', 'data_schemas2types',
            'data_schemas2shapes', 'is_batch_padding', 'get_variable_shape_index']
@@ -37,13 +38,21 @@ type2tf_dict = {
 }
 
 
+def to_array_pad(array):
+    """
+    padding 多维动态数据(padding zeros)
+    """
+    len_array = [len(d) for d in array]
+    pad_len = max(len_array)
+    return np.asarray([np.pad(d, (0, pad_len - l), 'constant') if pad_len > l else d for d, l in zip(array, len_array)])
+
+
 def load_hdfs_filelist(datadir, file_suffix, hadoop):
     filenames = []
     cmd = hadoop + ' fs -ls ' + datadir
     with subprocess.Popen(cmd, stdout=subprocess.PIPE, shell=True) as pipe:
         for line in iter(pipe.stdout.readline, b''):
-            items = line.decode(
-                'utf8', 'ignore').strip('\n').split(' ')
+            items = line.decode('utf8', 'ignore').strip('\n').split(' ')
             if len(items) > 3:
                 if file_suffix is None or items[-1].split('/')[-1].endswith(file_suffix):
                     filenames.append(items[-1])

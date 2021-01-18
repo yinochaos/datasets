@@ -10,7 +10,8 @@ with open('README.md') as readme_file:
 # with open('HISTORY.md') as history_file:
 #    history = history_file.read()
 
-requirements = ['tensorflow>=2.3.0', 'scipy', 'tdqm', 'python_speech_features', 'soundfile ']
+# install requirements
+requirements = ['tensorflow>=2.3.0', 'scipy', 'tdqm', 'python_speech_features', 'soundfile']
 
 setup_requirements = []
 
@@ -49,6 +50,6 @@ setup(
     test_suite='tests',
     tests_require=test_requirements,
     url='https://github.com/yinochaos/datasets',
-    version='0.0.11',
+    version='0.0.12',
     zip_safe=False,
 )
