@@ -73,12 +73,12 @@ class TFDataset(object):
             self.filenames = filenames
         self.file_suffix = file_suffix
 
-        if  len(data_schemas2types(self.parser.label_field)) > 1:
+        if len(data_schemas2types(self.parser.label_field)) > 1:
             self.is_multi_label = True
         else:
             self.is_multi_label = False
 
-        if  len(data_schemas2types(self.parser.feature_field)) > 1:
+        if len(data_schemas2types(self.parser.feature_field)) > 1:
             self.is_multi_features = True
         else:
             self.is_multi_features = False
@@ -302,12 +302,23 @@ class TFDataset(object):
                 if field.is_with_len:
                     features.append(tf.io.parse_tensor(data[field.name + '_len'], tf.int32))
             if self.parser.has_label:
+                weight = None
+                if self.parser.weight_fn is not None:
+                    weight = tf.io.parse_tensor(data['weight'], tf.float32)
                 labels = []
                 for field in self.parser.label_dict.values():
                     labels.append(tf.io.parse_tensor(data[field.name], type2tf_dict[field.dtype]))
                     if field.is_with_len:
                         labels.append(tf.io.parse_tensor(data[field.name + '_len'], tf.int32))
-                return tuple(features), tuple(labels)
+                if len(labels) > 1:
+                    labels = tuple(labels)
+                else:
+                    labels = labels[0]
+                print('FFFF', tuple(features), labels)
+                if weight is None:
+                    return tuple(features), labels
+                else:
+                    return tuple(features), labels,weight
             else:
                 return tuple(features)
         print('files', self.filenames)
@@ -352,6 +363,7 @@ class TFDataset(object):
         dataset = dataset.repeat(num_epochs)
         if self.parser.is_data_padding:
             padded_shapes = self._get_shapes(is_training)
+            print('padded_shapes', padded_shapes)
             dataset = dataset.padded_batch(
                 batch_size, padded_shapes=padded_shapes)
         else:
